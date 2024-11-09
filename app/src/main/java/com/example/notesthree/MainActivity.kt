@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.notesthree.ui.theme.NotesThreeTheme
 import java.util.UUID
+// Testing commit
 
 // FIX INTERFACE, FIX CLICKABLE NOTES (ADD EDIT AND DELETE WITHIN THE NOTE MAYBE),
 // RESETS ON FLIP???
@@ -67,7 +68,7 @@ fun NoteApp() {
 @Composable
 fun NoteListScreen(navController: NavController, noteList: MutableList<NoteItem>) {
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("Notes") }) },
+        topBar = { CenterAlignedTopAppBar(title = { Text("Basic Notes App") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate("AddNote") }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Note")
