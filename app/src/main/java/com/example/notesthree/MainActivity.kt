@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -15,20 +17,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.notesthree.ui.theme.NotesThreeTheme
 import java.util.UUID
-// Testing commit
 
-// FIX INTERFACE, FIX CLICKABLE NOTES (ADD EDIT AND DELETE WITHIN THE NOTE MAYBE),
-// RESETS ON FLIP???
-
-// Create object Notes
 data class NoteItem(
-    val id: String = UUID.randomUUID().toString(), // Change made here
+    val id: String = UUID.randomUUID().toString(),
     var title: String,
     var text: String
 )
@@ -44,7 +42,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Setup for navigation and app and our redirects to our screen functions
+
 @Composable
 fun NoteApp() {
     val navController = rememberNavController()
@@ -77,19 +75,14 @@ fun NoteListScreen(navController: NavController, noteList: MutableList<NoteItem>
     ) { padding ->
         LazyColumn(modifier = Modifier.padding(padding)) {
             items(noteList) { note ->
-                ListItem(
-                    headlineContent = { Text(note.title) },
-                    trailingContent = {
-                        Row {
-                            IconButton(onClick = { navController.navigate("EditNoteScreen/${note.id}") }) {
-                                Icon(Icons.Filled.Edit, contentDescription = "Edit Note")
-                            }
-                            IconButton(onClick = { noteList.remove(note) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Delete Note")
-                            }
-                        }
-                    }
-                )
+                // Make the note item clickable
+                Column(modifier = Modifier
+                    .clickable { navController.navigate("EditNoteScreen/${note.id}") }
+                    .border(1.dp, MaterialTheme.colorScheme.primary)
+                    .padding(8.dp)
+                ) {
+                    Text(note.title, style = MaterialTheme.typography.bodyLarge)
+                }
             }
         }
     }
@@ -108,7 +101,7 @@ fun validateContent(text: String): String? {
     return if (text.length > 120) "Text must be at most 120 characters long" else null
 }
 
-// Screen for creating new notes, redirect used in NoteApp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNoteScreen(navController: NavController, noteList: MutableList<NoteItem>) {
@@ -213,17 +206,29 @@ fun EditNoteScreen(navController: NavController, note: NoteItem) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                titleError = validateTitle(title)
-                contentError = validateContent(text)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(onClick = {
+                    titleError = validateTitle(title)
+                    contentError = validateContent(text)
 
-                if (titleError == null && contentError == null) {
-                    note.title = title
-                    note.text = text
-                    navController.popBackStack()
+                    if (titleError == null && contentError == null) {
+                        note.title = title
+                        note.text = text
+                        navController.popBackStack()
+                    }
+                }) {
+                    Text("Save Changes")
                 }
-            }) {
-                Text("Save Changes")
+
+                Button(onClick = {
+                    noteList.remove(note)
+                    navController.popBackStack()
+                }) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete Note")
+                }
             }
         }
     }
@@ -232,15 +237,3 @@ fun EditNoteScreen(navController: NavController, note: NoteItem) {
 
 
 
-
-
-
-
-/*
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    NotesThreeTheme {
-        Greeting("Android")
-    }
-}*/
