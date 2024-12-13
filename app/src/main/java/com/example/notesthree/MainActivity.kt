@@ -11,19 +11,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.notesthree.ui.theme.NotesThreeTheme
 import java.util.UUID
+
 
 data class NoteItem(
     val id: String = UUID.randomUUID().toString(),
@@ -48,47 +48,66 @@ fun NoteApp() {
     val navController = rememberNavController()
     val notesList = remember { mutableStateListOf<NoteItem>() }
 
+    // delete a note from list lambda function, passed as an argument in EditNoteScreen
+    // -> unit is void return
+    val removeNote: (NoteItem) -> Unit = { note ->
+        notesList.remove(note)
+    }
+
+
     NavHost(navController = navController, startDestination = "Notes") {
         composable("Notes") { NoteListScreen(navController, notesList) }
         composable("AddNote") { AddNoteScreen(navController, notesList) }
         composable("EditNoteScreen/{noteID}") { backStackEntry ->
-            val noteID = backStackEntry.arguments?.getString("noteID") ?: return@composable
-            val noteItem = notesList.find { it.id == noteID }
-            if (noteItem != null) {
-                EditNoteScreen(navController, noteItem)
+            val noteID = backStackEntry.arguments?.getString("noteID") ?: return@composable // gets id
+            val noteItem = notesList.find { it.id == noteID } // finds to display correct note
+            if (noteItem != null) { // if it's not null return it
+                EditNoteScreen(navController, noteItem, removeNote)
             }
         }
+
     }
 }
 
 // Screen for viewing our notes, redirect in NoteApp
+// scaffold is a core layout, floatingactionbutton has no placement e.g.
+// items is a function, list display
+// dynamic ui
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteListScreen(navController: NavController, noteList: MutableList<NoteItem>) {
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("Basic Notes App") }) },
+        topBar = { CenterAlignedTopAppBar(title = { Text("Very Basic Notes App") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate("AddNote") }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Note")
             }
         }
     ) { padding ->
-        LazyColumn(modifier = Modifier.padding(padding)) {
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+        ) {
             items(noteList) { note ->
-                // Make the note item clickable
-                Column(modifier = Modifier
-                    .clickable { navController.navigate("EditNoteScreen/${note.id}") }
-                    .border(1.dp, MaterialTheme.colorScheme.primary)
-                    .padding(8.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clickable { navController.navigate("EditNoteScreen/${note.id}") }
+                        .border(1.dp, MaterialTheme.colorScheme.primary)
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(note.title, style = MaterialTheme.typography.bodyLarge)
+                    Text(text = note.title, style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
     }
 }
 
+
 // Method for validation instead of repeating the code within other functions
+// parameter title:String, returns string or null (?)
 fun validateTitle(title: String): String? {
     return when {
         title.length < 3 -> "Title must be at least 3 characters long"
@@ -164,7 +183,7 @@ fun AddNoteScreen(navController: NavController, noteList: MutableList<NoteItem>)
 // Edit note screen, redirect used in NoteApp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditNoteScreen(navController: NavController, note: NoteItem) {
+fun EditNoteScreen(navController: NavController, note: NoteItem, removeNote: (NoteItem) -> Unit) {
     var title by remember { mutableStateOf(note.title) }
     var text by remember { mutableStateOf(note.text) }
     var titleError by remember { mutableStateOf<String?>(null) }
@@ -224,7 +243,7 @@ fun EditNoteScreen(navController: NavController, note: NoteItem) {
                 }
 
                 Button(onClick = {
-                    noteList.remove(note)
+                    removeNote(note)
                     navController.popBackStack()
                 }) {
                     Icon(Icons.Filled.Delete, contentDescription = "Delete Note")
